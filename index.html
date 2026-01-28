@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>课题组报账文件管理系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <div v-if="!isLoggedIn" class="login-container">
+            <h1>课题组报账文件管理系统</h1>
+            <div class="login-form">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" v-model="username" placeholder="请输入用户名">
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" v-model="password" placeholder="请输入密码">
+                </div>
+                <button @click="login">登录</button>
+            </div>
+        </div>
+        <div v-else class="main-container">
+            <header>
+                <h1>课题组报账文件管理系统</h1>
+                <div class="header-right">
+                    <span>欢迎，{{ currentUser }}</span>
+                    <button @click="logout">退出登录</button>
+                    <button v-if="isAdmin" @click="viewAllUsers">查看所有用户数据</button>
+                </div>
+            </header>
+            <nav>
+                <div class="nav-item" v-for="module in modules" :key="module.id" @click="selectModule(module.id)">
+                    {{ module.name }}
+                </div>
+            </nav>
+            <main>
+                <div v-if="selectedModule" class="module-content">
+                    <h2>{{ getModuleName(selectedModule) }}</h2>
+                    <div class="name-date-input">
+                        <label>姓名日期</label>
+                        <input type="text" v-model="nameDate" placeholder="例如：张三_20240101">
+                    </div>
+                    <div class="file-types">
+                        <div v-for="fileType in getFileTypes(selectedModule)" :key="fileType.id" class="file-type-item">
+                            <h3>{{ fileType.name }}</h3>
+                            <div class="file-upload">
+                                <input type="file" :multiple="true" :accept="fileType.accept" @change="handleFileUpload(selectedModule, fileType.id, $event)">
+                                <div class="uploaded-files">
+                                    <div v-for="(file, index) in uploadedFiles[selectedModule]?.[fileType.id] || []" :key="index" class="file-item">
+                                        {{ file.name }}
+                                        <div class="file-actions">
+                                            <button @click="downloadFile(selectedModule, fileType.id, index)">下载</button>
+                                            <button @click="removeFile(selectedModule, fileType.id, index)">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="deadline-setting">
+                        <h3>报销截止时间</h3>
+                        <div class="deadline-options">
+                            <label>
+                                <input type="radio" v-model="deadlineOption" value="date">
+                                具体日期
+                                <input type="date" v-model="deadlineDate" :disabled="deadlineOption !== 'date'">
+                            </label>
+                            <label>
+                                <input type="radio" v-model="deadlineOption" value="none">
+                                无要求
+                            </label>
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button @click="saveFileGroup">确定（分组）</button>
+                        <button @click="downloadFileGroup">下载整组</button>
+                    </div>
+                </div>
+                <div v-else class="welcome-message">
+                    <h2>请选择一个模块开始操作</h2>
+                </div>
+            </main>
+            <footer>
+                <div class="storage-info">
+                    <button @click="showStorageInfo">查看存储信息</button>
+                    <div v-if="showStorage" class="storage-details">
+                        <p>存储位置：云端存储</p>
+                        <p>已使用容量：{{ usedStorage }} MB</p>
+                        <p>总容量：{{ totalStorage }} MB</p>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>

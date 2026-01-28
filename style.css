@@ -1,0 +1,375 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+#app {
+    min-height: 100vh;
+}
+
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background-color: #f0f2f5;
+}
+
+.login-container h1 {
+    margin-bottom: 30px;
+    color: #1890ff;
+}
+
+.login-form {
+    background-color: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.login-form button {
+    width: 100%;
+    padding: 12px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.login-form button:hover {
+    background-color: #40a9ff;
+}
+
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+header {
+    background-color: #1890ff;
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-right span {
+    font-size: 16px;
+}
+
+.header-right button {
+    padding: 8px 16px;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.header-right button:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+nav {
+    background-color: white;
+    padding: 0 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item {
+    display: inline-block;
+    padding: 15px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.nav-item:hover {
+    color: #1890ff;
+}
+
+.nav-item.active {
+    color: #1890ff;
+    border-bottom-color: #1890ff;
+}
+
+main {
+    flex: 1;
+    padding: 20px;
+    background-color: #f0f2f5;
+}
+
+.module-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.module-content h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.name-date-input {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+.name-date-input label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.name-date-input input {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.file-types {
+    margin-bottom: 30px;
+}
+
+.file-type-item {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+.file-type-item h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.file-upload {
+    margin-bottom: 15px;
+}
+
+.file-upload input[type="file"] {
+    margin-bottom: 10px;
+}
+
+.uploaded-files {
+    margin-top: 10px;
+}
+
+.file-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: white;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+    margin-bottom: 8px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.file-actions button {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.file-actions button:first-child {
+    background-color: #1890ff;
+    color: white;
+}
+
+.file-actions button:first-child:hover {
+    background-color: #40a9ff;
+}
+
+.file-actions button:last-child {
+    background-color: #ff4d4f;
+    color: white;
+}
+
+.file-actions button:last-child:hover {
+    background-color: #ff7875;
+}
+
+.deadline-setting {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #fafafa;
+    border-radius: 4px;
+}
+
+.deadline-setting h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.deadline-options {
+    display: flex;
+    gap: 30px;
+}
+
+.deadline-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.deadline-options input[type="date"] {
+    padding: 6px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.action-buttons button {
+    padding: 12px 24px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+.action-buttons button:hover {
+    background-color: #40a9ff;
+}
+
+.welcome-message {
+    background-color: white;
+    padding: 60px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.welcome-message h2 {
+    color: #666;
+}
+
+footer {
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+    margin-top: auto;
+}
+
+.storage-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.storage-info button {
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.storage-info button:hover {
+    background-color: #e0e0e0;
+}
+
+.storage-details {
+    margin-left: 15px;
+    font-size: 14px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+    
+    .header-right {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    nav {
+        overflow-x: auto;
+    }
+    
+    .nav-item {
+        white-space: nowrap;
+    }
+    
+    .deadline-options {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .action-buttons button {
+        width: 100%;
+    }
+}
