@@ -333,29 +333,6 @@ new Vue({
                 });
             });
             this.usedStorage = Math.round(used / (1024 * 1024));
-        }
-    },
-    watch: {
-        deadlineOption(newVal) {
-            if (newVal === 'none') {
-                this.deadlineDate = '';
-            }
-        }
-    },
-    mounted() {
-            // 从本地存储加载文件组数据
-            const savedFileGroups = localStorage.getItem('fileGroups');
-            if (savedFileGroups) {
-                this.fileGroups = JSON.parse(savedFileGroups);
-            } else {
-                // 初始化文件组存储
-                this.fileGroups = {};
-            }
-            
-            // 初始化当前用户的文件组存储
-            if (!this.fileGroups[this.currentUser]) {
-                this.fileGroups[this.currentUser] = {};
-            }
         },
         viewMyFiles() {
             // 构建用户文件列表的HTML
@@ -403,4 +380,27 @@ new Vue({
             `);
             popup.document.close();
         }
+    },
+    watch: {
+        deadlineOption(newVal) {
+            if (newVal === 'none') {
+                this.deadlineDate = '';
+            }
+        }
+    },
+    mounted() {
+        // 从本地存储加载文件组数据
+        const savedFileGroups = localStorage.getItem('fileGroups');
+        if (savedFileGroups) {
+            this.fileGroups = JSON.parse(savedFileGroups);
+        } else {
+            // 初始化文件组存储
+            this.fileGroups = {};
+        }
+        
+        // 初始化当前用户的文件组存储
+        if (!this.fileGroups[this.currentUser]) {
+            this.fileGroups[this.currentUser] = {};
+        }
+    }
 });
