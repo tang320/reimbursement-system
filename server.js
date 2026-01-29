@@ -11,6 +11,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 配置静态文件服务
+app.use(express.static(__dirname));
+
 // 云存储配置示例（实际项目中使用）
 // const OSS = require('ali-oss');
 // const client = new OSS({
