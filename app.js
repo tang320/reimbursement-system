@@ -62,6 +62,7 @@ new Vue({
     },
     methods: {
         login() {
+            // 本地登录验证（模拟）
             const user = this.users.find(u => u.username === this.username && u.password === this.password);
             if (user) {
                 this.isLoggedIn = true;
@@ -75,6 +76,8 @@ new Vue({
                 if (!this.fileGroups[this.currentUser]) {
                     this.fileGroups[this.currentUser] = {};
                 }
+                // 登录成功提示
+                alert('登录成功！');
             } else {
                 alert('用户名或密码错误');
             }
@@ -129,88 +132,106 @@ new Vue({
         async saveFileGroup() {
             if (!this.selectedModule) return;
             
-            // 上传文件到后端服务器
-            const formData = new FormData();
-            formData.append('userId', this.currentUser);
-            formData.append('moduleId', this.selectedModule);
+            // 本地保存文件组（确保数据持久化）
+            const groupData = {
+                module: this.selectedModule,
+                moduleName: this.getModuleName(this.selectedModule),
+                nameDate: this.nameDate,
+                deadlineOption: this.deadlineOption,
+                deadlineDate: this.deadlineDate,
+                files: this.uploadedFiles[this.selectedModule],
+                timestamp: new Date().toISOString()
+            };
             
-            // 添加所有文件
-            if (this.uploadedFiles[this.selectedModule]) {
-                Object.values(this.uploadedFiles[this.selectedModule]).forEach(files => {
-                    files.forEach(file => {
-                        formData.append('files', file);
-                    });
-                });
+            if (!this.fileGroups[this.currentUser]) {
+                this.fileGroups[this.currentUser] = {};
+            }
+            if (!this.fileGroups[this.currentUser][this.selectedModule]) {
+                this.fileGroups[this.currentUser][this.selectedModule] = [];
             }
             
+            this.fileGroups[this.currentUser][this.selectedModule].push(groupData);
+            
+            // 保存到本地存储（持久化）
             try {
+                localStorage.setItem('fileGroups', JSON.stringify(this.fileGroups));
+                alert('文件组保存成功！');
+            } catch (error) {
+                console.error('保存到本地存储失败：', error);
+                alert('文件组保存成功，但本地存储失败，可能会影响数据持久化');
+            }
+            
+            // 同时尝试上传到后端服务器（可选）
+            try {
+                const formData = new FormData();
+                formData.append('userId', this.currentUser);
+                formData.append('moduleId', this.selectedModule);
+                
+                // 添加所有文件
+                if (this.uploadedFiles[this.selectedModule]) {
+                    Object.values(this.uploadedFiles[this.selectedModule]).forEach(files => {
+                        files.forEach(file => {
+                            formData.append('files', file);
+                        });
+                    });
+                }
+                
                 // 真实上传请求（Vercel部署时使用）
-                const response = await fetch('https://reimbursement-system.vercel.app/api/upload', {
+                fetch('https://reimbursement-system.vercel.app/api/upload', {
                     method: 'POST',
                     body: formData
-                });
-                const result = await response.json();
-                
-                // 模拟成功响应（本地开发时使用）
-                // const result = { success: true, files: [] };
-                
-                if (result.success) {
-                    const groupData = {
-                        module: this.selectedModule,
-                        moduleName: this.getModuleName(this.selectedModule),
-                        nameDate: this.nameDate,
-                        deadlineOption: this.deadlineOption,
-                        deadlineDate: this.deadlineDate,
-                        files: this.uploadedFiles[this.selectedModule],
-                        timestamp: new Date().toISOString()
-                    };
-                    
-                    if (!this.fileGroups[this.currentUser]) {
-                        this.fileGroups[this.currentUser] = {};
-                    }
-                    if (!this.fileGroups[this.currentUser][this.selectedModule]) {
-                        this.fileGroups[this.currentUser][this.selectedModule] = [];
-                    }
-                    
-                    this.fileGroups[this.currentUser][this.selectedModule].push(groupData);
-                    
-                    // 模拟保存到本地存储
-                    localStorage.setItem('fileGroups', JSON.stringify(this.fileGroups));
-                    
-                    alert('文件组保存成功！');
-                    
-                    // 重置当前模块的文件
-                    this.uploadedFiles[this.selectedModule] = {};
-                    this.fileTypes[this.selectedModule].forEach(type => {
-                        this.uploadedFiles[this.selectedModule][type.id] = [];
-                    });
-                    this.nameDate = '';
-                    this.deadlineOption = 'none';
-                    this.deadlineDate = '';
-                } else {
-                    alert('文件上传失败：' + result.message);
-                }
+                }).then(response => response.json())
+                  .then(result => {
+                      if (!result.success) {
+                          console.warn('后端上传失败：', result.message);
+                      }
+                  }).catch(error => {
+                      console.warn('后端上传失败：', error);
+                  });
             } catch (error) {
-                console.error('上传失败：', error);
-                alert('文件上传失败，请稍后重试');
+                console.warn('后端上传失败：', error);
             }
+            
+            // 重置当前模块的文件
+            this.uploadedFiles[this.selectedModule] = {};
+            this.fileTypes[this.selectedModule].forEach(type => {
+                this.uploadedFiles[this.selectedModule][type.id] = [];
+            });
+            this.nameDate = '';
+            this.deadlineOption = 'none';
+            this.deadlineDate = '';
         },
         downloadFileGroup() {
             if (!this.selectedModule) return;
             
-            // 模拟下载功能
-            const moduleName = this.getModuleName(this.selectedModule);
-            const fileName = `${moduleName}${this.nameDate ? '_' + this.nameDate : ''}.zip`;
+            // 检查是否有文件
+            if (!this.uploadedFiles[this.selectedModule]) {
+                alert('没有文件可以下载');
+                return;
+            }
             
             // 计算文件大小
             let totalSize = 0;
+            let hasFiles = false;
             if (this.uploadedFiles[this.selectedModule]) {
                 Object.values(this.uploadedFiles[this.selectedModule]).forEach(files => {
+                    if (files.length > 0) {
+                        hasFiles = true;
+                    }
                     files.forEach(file => {
                         totalSize += file.size;
                     });
                 });
             }
+            
+            if (!hasFiles) {
+                alert('没有文件可以下载');
+                return;
+            }
+            
+            // 模拟下载功能
+            const moduleName = this.getModuleName(this.selectedModule);
+            const fileName = `${moduleName}${this.nameDate ? '_' + this.nameDate : ''}.zip`;
             
             alert(`文件组已准备就绪，即将下载：${fileName}\n文件大小：${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
             
@@ -218,19 +239,80 @@ new Vue({
             // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download-group/${this.currentUser}/${this.selectedModule}?nameDate=${this.nameDate}`;
         },
         downloadFile(moduleId, fileTypeId, index) {
-            // 模拟单文件下载功能
+            // 单文件下载功能
             const file = this.uploadedFiles[moduleId]?.[fileTypeId]?.[index];
             if (file) {
                 alert(`文件已准备就绪，即将下载：${file.name}\n文件大小：${(file.size / (1024 * 1024)).toFixed(2)} MB`);
                 
+                // 创建临时下载链接
+                const downloadLink = document.createElement('a');
+                downloadLink.href = URL.createObjectURL(file);
+                downloadLink.download = file.name;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                
                 // 实际项目中，这里应该实现真实的文件下载功能
                 // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download/${this.currentUser}/${moduleId}/${file.name}`;
+            } else {
+                alert('文件不存在，无法下载');
             }
         },
         viewAllUsers() {
-            // 模拟查看所有用户数据
-            alert('查看所有用户数据功能已触发');
-            // 实际项目中，这里应该显示所有用户的文件数据
+            // 管理员查看所有用户数据
+            if (!this.isAdmin) {
+                alert('权限不足，只有管理员可以查看所有用户数据');
+                return;
+            }
+            
+            // 构建所有用户数据的HTML
+            let allUsersData = '<h3>所有用户数据</h3>';
+            
+            // 遍历所有用户
+            Object.keys(this.fileGroups).forEach(username => {
+                allUsersData += `<h4>${username} 的数据</h4>`;
+                
+                // 遍历用户的所有模块
+                Object.keys(this.fileGroups[username]).forEach(moduleId => {
+                    const moduleName = this.getModuleName(moduleId);
+                    allUsersData += `<h5>${moduleName}</h5>`;
+                    
+                    // 遍历模块的所有文件组
+                    this.fileGroups[username][moduleId].forEach((group, index) => {
+                        allUsersData += `<p>文件组 ${index + 1} (${group.timestamp})</p>`;
+                        allUsersData += `<p>姓名日期：${group.nameDate}</p>`;
+                        allUsersData += `<p>报销截止时间：${group.deadlineOption === 'date' ? group.deadlineDate : '无要求'}</p>`;
+                        allUsersData += '<hr>';
+                    });
+                });
+            });
+            
+            // 如果没有数据
+            if (allUsersData === '<h3>所有用户数据</h3>') {
+                allUsersData += '<p>暂无用户数据</p>';
+            }
+            
+            // 创建弹窗显示所有用户数据
+            const popup = window.open('', 'allUsersData', 'width=800,height=600');
+            popup.document.write(`
+                <html>
+                <head>
+                    <title>所有用户数据</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h3 { color: #1890ff; }
+                        h4 { color: #333; }
+                        h5 { color: #666; }
+                        p { margin: 5px 0; }
+                        hr { margin: 15px 0; border: 1px solid #eee; }
+                    </style>
+                </head>
+                <body>
+                    ${allUsersData}
+                </body>
+                </html>
+            `);
+            popup.document.close();
         },
         showStorageInfo() {
             this.showStorage = !this.showStorage;
