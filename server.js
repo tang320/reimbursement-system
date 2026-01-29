@@ -42,15 +42,57 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// 模拟云存储上传函数
+// 七牛云存储上传函数
 async function uploadToCloudStorage(filePath, fileName) {
-    // 实际项目中，这里应该实现真实的云存储上传逻辑
-    // 例如：await client.put(fileName, filePath);
-    console.log(`模拟上传文件到云存储：${fileName}`);
-    return {
-        success: true,
-        url: `https://cloud-storage.example.com/${fileName}`
-    };
+    try {
+        // 七牛云配置
+        const qiniu = require('qiniu');
+        const accessKey = '7bY2y_9rorBou27jnh_AEgiV8zrk95phZIn0QSdJ';
+        const secretKey = 'b3vNsvXwjJpVDLyOpRDHnoTANQZCosSj8Q_43aGE';
+        const bucket = 'reimbursement-system';
+        
+        // 生成上传凭证
+        const mac = new qiniu.auth.digest.Mac(accessKey, secretKey);
+        const options = {
+           scope: bucket,
+           expires: 7200
+         };
+         const putPolicy = new qiniu.rs.PutPolicy(options);
+        const uploadToken = putPolicy.uploadToken(mac);
+        
+        // 配置上传
+        const config = new qiniu.conf.Config();
+        config.zone = qiniu.zone.Zone_z0; // 华东区域
+        const formUploader = new qiniu.form_up.FormUploader(config);
+        const putExtra = new qiniu.form_up.PutExtra();
+        
+        // 上传文件
+        return new Promise((resolve, reject) => {
+          formUploader.putFile(uploadToken, fileName, filePath, putExtra, (respErr, respBody, respInfo) => {
+            if (respErr) {
+              reject(respErr);
+            } else {
+              if (respInfo.statusCode === 200) {
+                resolve({
+                  success: true,
+                  url: `https://t9lrzq98r.hn-bkt.clouddn.com/${fileName}`
+                });
+              } else {
+                resolve({
+                  success: false,
+                  message: respBody.error
+                });
+              }
+            }
+          });
+        });
+    } catch (error) {
+        console.error('云存储上传失败：', error);
+        return {
+            success: false,
+            message: error.message
+        };
+    }
 }
 
 // 模拟用户数据

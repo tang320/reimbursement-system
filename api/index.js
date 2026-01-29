@@ -128,31 +128,57 @@ app.post('/api/login', (req, res) => {
 
 // 文件上传路由
 app.post('/api/upload', upload.array('files'), async (req, res) => {
-    const files = req.files;
-    const userId = req.body.userId;
-    const moduleId = req.body.moduleId;
-    
-    if (files.length > 0) {
-        // 上传文件到云存储
-        const cloudUploadPromises = files.map(async (file) => {
-            const cloudFileName = `${userId}/${moduleId}/${path.basename(file.path)}`;
-            const cloudResult = await uploadToCloudStorage(file.path, cloudFileName);
-            return {
-                name: file.originalname,
-                path: file.path,
-                cloudUrl: cloudResult.url,
-                size: file.size
-            };
+    try {
+        const files = req.files;
+        const userId = req.body.userId;
+        const moduleId = req.body.moduleId;
+        const nameDate = req.body.nameDate;
+        const deadlineOption = req.body.deadlineOption;
+        const deadlineDate = req.body.deadlineDate;
+        
+        console.log('接收到上传请求：', {
+            userId,
+            moduleId,
+            nameDate,
+            deadlineOption,
+            deadlineDate,
+            fileCount: files.length
         });
         
-        const uploadedFiles = await Promise.all(cloudUploadPromises);
-        
-        res.json({
-            success: true,
-            files: uploadedFiles
+        if (files.length > 0) {
+            // 上传文件到云存储
+            const cloudUploadPromises = files.map(async (file) => {
+                console.log('开始上传文件：', file.originalname);
+                const cloudFileName = `${userId}/${moduleId}/${nameDate || 'unknown'}/${path.basename(file.path)}`;
+                const cloudResult = await uploadToCloudStorage(file.path, cloudFileName);
+                console.log('文件上传成功：', file.originalname, cloudResult.url);
+                return {
+                    name: file.originalname,
+                    path: file.path,
+                    cloudUrl: cloudResult.url,
+                    size: file.size
+                };
+            });
+            
+            const uploadedFiles = await Promise.all(cloudUploadPromises);
+            
+            console.log('所有文件上传完成，共上传：', uploadedFiles.length, '个文件');
+            
+            res.json({
+                success: true,
+                files: uploadedFiles,
+                message: `成功上传 ${uploadedFiles.length} 个文件到云端`
+            });
+        } else {
+            console.log('没有文件被上传');
+            res.json({ success: false, message: '没有文件被上传' });
+        }
+    } catch (error) {
+        console.error('文件上传失败：', error);
+        res.json({ 
+            success: false, 
+            message: '文件上传失败：' + error.message 
         });
-    } else {
-        res.json({ success: false, message: '没有文件被上传' });
     }
 });
 

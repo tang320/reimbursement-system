@@ -164,37 +164,58 @@ new Vue({
                 alert('文件组保存成功，但本地存储失败，可能会影响数据持久化');
             }
             
-            // 同时尝试上传到后端服务器（可选）
+            // 上传到后端服务器（必选，确保文件存储到云端）
             try {
                 const formData = new FormData();
                 formData.append('userId', this.currentUser);
                 formData.append('moduleId', this.selectedModule);
+                formData.append('nameDate', this.nameDate);
+                formData.append('deadlineOption', this.deadlineOption);
+                formData.append('deadlineDate', this.deadlineDate);
                 
                 // 添加所有文件
+                let fileCount = 0;
                 if (this.uploadedFiles[this.selectedModule]) {
                     Object.values(this.uploadedFiles[this.selectedModule]).forEach(files => {
                         files.forEach(file => {
                             formData.append('files', file);
+                            fileCount++;
                         });
                     });
                 }
                 
-                // 真实上传请求（Vercel部署时使用）
-                fetch('https://reimbursement-system.vercel.app/api/upload', {
-                    method: 'POST',
-                    body: formData
-                }).then(response => response.json())
-                  .then(result => {
-                      if (!result.success) {
-                          console.warn('后端上传失败：', result.message);
-                      } else {
-                          console.log('后端上传成功：', result);
-                      }
-                  }).catch(error => {
-                      console.warn('后端上传失败：', error);
-                  });
+                if (fileCount > 0) {
+                    // 本地开发服务器地址
+                    fetch('http://localhost:3001/api/upload', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => response.json())
+                      .then(result => {
+                          if (!result.success) {
+                              console.warn('后端上传失败：', result.message);
+                              alert('文件上传到云端失败：' + result.message);
+                          } else {
+                              console.log('后端上传成功：', result);
+                              // 存储云存储文件URL到文件组
+                              if (result.files && result.files.length > 0) {
+                                  console.log('云存储文件URL：', result.files.map(f => f.cloudUrl));
+                                  // 更新刚添加的文件组，添加云存储文件信息
+                                  const lastGroupIndex = this.fileGroups[this.currentUser][this.selectedModule].length - 1;
+                                  if (lastGroupIndex >= 0) {
+                                      this.fileGroups[this.currentUser][this.selectedModule][lastGroupIndex].cloudFiles = result.files;
+                                      // 重新保存到本地存储
+                                      localStorage.setItem('fileGroups', JSON.stringify(this.fileGroups));
+                                  }
+                              }
+                          }
+                      }).catch(error => {
+                          console.warn('后端上传失败：', error);
+                          alert('文件上传到云端失败：' + error.message);
+                      });
+                }
             } catch (error) {
                 console.warn('后端上传失败：', error);
+                alert('文件上传到云端失败：' + error.message);
             }
             
             // 重置当前模块的文件
@@ -262,13 +283,6 @@ new Vue({
             // 从已上传的文件中获取文件（当前会话中的文件）
             let file = this.uploadedFiles[moduleId]?.[fileTypeId]?.[index];
             
-            // 如果当前会话中没有文件，尝试从文件组中获取
-            if (!file && this.fileGroups[targetUser] && this.fileGroups[targetUser][moduleId]) {
-                // 这里简化处理，实际项目中需要更复杂的逻辑来定位文件
-                alert('文件已保存到文件组，请在文件组中查看和下载');
-                return;
-            }
-            
             if (file) {
                 alert(`文件已准备就绪，即将下载：${file.name}\n文件大小：${(file.size / (1024 * 1024)).toFixed(2)} MB`);
                 
@@ -279,9 +293,48 @@ new Vue({
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
+            } else if (this.fileGroups[targetUser] && this.fileGroups[targetUser][moduleId]) {
+                // 从文件组中查找文件（已保存的文件）
+                let foundFile = null;
+                let foundCloudFile = null;
                 
-                // 实际项目中，这里应该实现真实的文件下载功能
-                // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download/${targetUser}/${moduleId}/${file.name}`;
+                // 遍历文件组，查找包含该文件类型的文件
+                for (const group of this.fileGroups[targetUser][moduleId]) {
+                    // 检查云存储文件
+                    if (group.cloudFiles && group.cloudFiles.length > 0) {
+                        // 尝试找到对应类型的文件
+                        foundCloudFile = group.cloudFiles[index];
+                        if (foundCloudFile) {
+                            break;
+                        }
+                    }
+                    // 检查本地文件
+                    if (group.files && group.files[fileTypeId] && group.files[fileTypeId][index]) {
+                        foundFile = group.files[fileTypeId][index];
+                        break;
+                    }
+                }
+                
+                if (foundCloudFile) {
+                    // 从云存储下载
+                    alert(`文件已准备就绪，即将从云端下载：${foundCloudFile.name}\n文件大小：${(foundCloudFile.size / (1024 * 1024)).toFixed(2)} MB`);
+                    
+                    // 创建下载链接
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = foundCloudFile.cloudUrl;
+                    downloadLink.download = foundCloudFile.name;
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                } else if (foundFile) {
+                    // 从本地下载
+                    alert(`文件已准备就绪，即将下载：${foundFile.name}\n文件大小：${(foundFile.size / (1024 * 1024)).toFixed(2)} MB`);
+                    
+                    // 本地开发服务器下载
+                    window.location.href = `http://localhost:3001/api/download/${targetUser}/${moduleId}/${foundFile.name}`;
+                } else {
+                    alert('文件不存在，无法下载');
+                }
             } else {
                 alert('文件不存在，无法下载');
             }
@@ -292,6 +345,9 @@ new Vue({
                 alert('权限不足，只有管理员可以查看所有用户数据');
                 return;
             }
+            
+            // 保存Vue实例引用，供弹窗使用
+            window.app = this;
             
             // 构建所有用户数据的HTML
             let allUsersData = '<h3>所有用户数据</h3>';
@@ -310,6 +366,12 @@ new Vue({
                         allUsersData += `<p>文件组 ${index + 1} (${group.timestamp})</p>`;
                         allUsersData += `<p>姓名日期：${group.nameDate}</p>`;
                         allUsersData += `<p>报销截止时间：${group.deadlineOption === 'date' ? group.deadlineDate : '无要求'}</p>`;
+                        // 添加下载按钮
+                        if (group.cloudFiles && group.cloudFiles.length > 0) {
+                            group.cloudFiles.forEach((cloudFile, fileIndex) => {
+                                allUsersData += `<p><button class="download-btn" onclick="window.opener.app.downloadFile('${moduleId}', 'invoice', ${fileIndex}, '${username}')">下载 ${cloudFile.name}</button></p>`;
+                            });
+                        }
                         allUsersData += '<hr>';
                     });
                 });
