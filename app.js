@@ -206,11 +206,14 @@ new Vue({
             this.deadlineOption = 'none';
             this.deadlineDate = '';
         },
-        downloadFileGroup() {
+        downloadFileGroup(username = null) {
             if (!this.selectedModule) return;
             
+            // 确定用户（支持管理员下载其他用户的文件组）
+            const targetUser = username || this.currentUser;
+            
             // 检查是否有文件
-            if (!this.uploadedFiles[this.selectedModule]) {
+            if (!this.uploadedFiles[this.selectedModule] && (!this.fileGroups[targetUser] || !this.fileGroups[targetUser][this.selectedModule])) {
                 alert('没有文件可以下载');
                 return;
             }
@@ -218,6 +221,8 @@ new Vue({
             // 计算文件大小
             let totalSize = 0;
             let hasFiles = false;
+            
+            // 从当前会话中的文件计算
             if (this.uploadedFiles[this.selectedModule]) {
                 Object.values(this.uploadedFiles[this.selectedModule]).forEach(files => {
                     if (files.length > 0) {
@@ -227,6 +232,13 @@ new Vue({
                         totalSize += file.size;
                     });
                 });
+            }
+            
+            // 从文件组中计算
+            if (!hasFiles && this.fileGroups[targetUser] && this.fileGroups[targetUser][this.selectedModule]) {
+                hasFiles = true;
+                // 这里简化处理，实际项目中需要更复杂的逻辑来计算文件大小
+                totalSize = 1024 * 1024; // 模拟1MB
             }
             
             if (!hasFiles) {
@@ -241,11 +253,22 @@ new Vue({
             alert(`文件组已准备就绪，即将下载：${fileName}\n文件大小：${(totalSize / (1024 * 1024)).toFixed(2)} MB`);
             
             // 实际项目中，这里应该实现真实的文件打包和下载功能
-            // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download-group/${this.currentUser}/${this.selectedModule}?nameDate=${this.nameDate}`;
+            // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download-group/${targetUser}/${this.selectedModule}?nameDate=${this.nameDate}`;
         },
-        downloadFile(moduleId, fileTypeId, index) {
-            // 单文件下载功能
-            const file = this.uploadedFiles[moduleId]?.[fileTypeId]?.[index];
+        downloadFile(moduleId, fileTypeId, index, username = null) {
+            // 确定用户（支持管理员下载其他用户的文件）
+            const targetUser = username || this.currentUser;
+            
+            // 从已上传的文件中获取文件（当前会话中的文件）
+            let file = this.uploadedFiles[moduleId]?.[fileTypeId]?.[index];
+            
+            // 如果当前会话中没有文件，尝试从文件组中获取
+            if (!file && this.fileGroups[targetUser] && this.fileGroups[targetUser][moduleId]) {
+                // 这里简化处理，实际项目中需要更复杂的逻辑来定位文件
+                alert('文件已保存到文件组，请在文件组中查看和下载');
+                return;
+            }
+            
             if (file) {
                 alert(`文件已准备就绪，即将下载：${file.name}\n文件大小：${(file.size / (1024 * 1024)).toFixed(2)} MB`);
                 
@@ -258,7 +281,7 @@ new Vue({
                 document.body.removeChild(downloadLink);
                 
                 // 实际项目中，这里应该实现真实的文件下载功能
-                // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download/${this.currentUser}/${moduleId}/${file.name}`;
+                // 例如：window.location.href = `https://reimbursement-system.vercel.app/api/download/${targetUser}/${moduleId}/${file.name}`;
             } else {
                 alert('文件不存在，无法下载');
             }
@@ -310,6 +333,7 @@ new Vue({
                         h5 { color: #666; }
                         p { margin: 5px 0; }
                         hr { margin: 15px 0; border: 1px solid #eee; }
+                        .download-btn { padding: 4px 8px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
                     </style>
                 </head>
                 <body>
