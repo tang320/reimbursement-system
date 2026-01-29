@@ -186,7 +186,7 @@ new Vue({
                 
                 if (fileCount > 0) {
                     // 本地开发服务器地址
-                    fetch('http://localhost:3001/api/upload', {
+                    fetch('/api/upload', {
                         method: 'POST',
                         body: formData
                     }).then(response => response.json())
