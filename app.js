@@ -65,6 +65,7 @@ new Vue({
             // 本地登录验证（模拟）
             const user = this.users.find(u => u.username === this.username && u.password === this.password);
             if (user) {
+                // 更新登录状态
                 this.isLoggedIn = true;
                 this.currentUser = user.username;
                 this.isAdmin = user.isAdmin;
@@ -78,6 +79,8 @@ new Vue({
                 }
                 // 登录成功提示
                 alert('登录成功！');
+                // 强制重新渲染界面
+                this.$forceUpdate();
             } else {
                 alert('用户名或密码错误');
             }
