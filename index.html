@@ -27,8 +27,9 @@
                 <h1>课题组报账文件管理系统</h1>
                 <div class="header-right">
                     <span>欢迎，{{ currentUser }}</span>
-                    <button @click="logout">退出登录</button>
+                    <button @click="viewMyFiles">查看我的文件</button>
                     <button v-if="isAdmin" @click="viewAllUsers">查看所有用户数据</button>
+                    <button @click="logout">退出登录</button>
                 </div>
             </header>
             <nav>

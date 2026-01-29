@@ -184,6 +184,8 @@ new Vue({
                   .then(result => {
                       if (!result.success) {
                           console.warn('后端上传失败：', result.message);
+                      } else {
+                          console.log('后端上传成功：', result);
                       }
                   }).catch(error => {
                       console.warn('后端上传失败：', error);
@@ -338,10 +340,64 @@ new Vue({
         }
     },
     mounted() {
-        // 从本地存储加载文件组数据
-        const savedFileGroups = localStorage.getItem('fileGroups');
-        if (savedFileGroups) {
-            this.fileGroups = JSON.parse(savedFileGroups);
+            // 从本地存储加载文件组数据
+            const savedFileGroups = localStorage.getItem('fileGroups');
+            if (savedFileGroups) {
+                this.fileGroups = JSON.parse(savedFileGroups);
+            } else {
+                // 初始化文件组存储
+                this.fileGroups = {};
+            }
+            
+            // 初始化当前用户的文件组存储
+            if (!this.fileGroups[this.currentUser]) {
+                this.fileGroups[this.currentUser] = {};
+            }
+        },
+        viewMyFiles() {
+            // 构建用户文件列表的HTML
+            let myFilesData = '<h3>我的文件列表</h3>';
+            
+            // 遍历用户的所有模块
+            if (this.fileGroups[this.currentUser]) {
+                Object.keys(this.fileGroups[this.currentUser]).forEach(moduleId => {
+                    const moduleName = this.getModuleName(moduleId);
+                    myFilesData += `<h4>${moduleName}</h4>`;
+                    
+                    // 遍历模块的所有文件组
+                    this.fileGroups[this.currentUser][moduleId].forEach((group, index) => {
+                        myFilesData += `<p>文件组 ${index + 1} (${group.timestamp})</p>`;
+                        myFilesData += `<p>姓名日期：${group.nameDate}</p>`;
+                        myFilesData += `<p>报销截止时间：${group.deadlineOption === 'date' ? group.deadlineDate : '无要求'}</p>`;
+                        myFilesData += '<hr>';
+                    });
+                });
+            }
+            
+            // 如果没有数据
+            if (myFilesData === '<h3>我的文件列表</h3>') {
+                myFilesData += '<p>暂无文件数据</p>';
+            }
+            
+            // 创建弹窗显示用户文件列表
+            const popup = window.open('', 'myFilesData', 'width=800,height=600');
+            popup.document.write(`
+                <html>
+                <head>
+                    <title>我的文件列表</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; }
+                        h3 { color: #1890ff; }
+                        h4 { color: #333; }
+                        p { margin: 5px 0; }
+                        hr { margin: 15px 0; border: 1px solid #eee; }
+                    </style>
+                </head>
+                <body>
+                    ${myFilesData}
+                </body>
+                </html>
+            `);
+            popup.document.close();
         }
-    }
 });
