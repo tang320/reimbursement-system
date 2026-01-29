@@ -197,7 +197,7 @@ new Vue({
                           } else {
                               console.log('后端上传成功：', result);
                               // 存储云存储文件URL到文件组
-                              if (result.files && result.files.length > 0) {
+                              if (result.files && Array.isArray(result.files) && result.files.length > 0) {
                                   console.log('云存储文件URL：', result.files.map(f => f.cloudUrl));
                                   // 更新刚添加的文件组，添加云存储文件信息
                                   const lastGroupIndex = this.fileGroups[this.currentUser][this.selectedModule].length - 1;
@@ -205,7 +205,11 @@ new Vue({
                                       this.fileGroups[this.currentUser][this.selectedModule][lastGroupIndex].cloudFiles = result.files;
                                       // 重新保存到本地存储
                                       localStorage.setItem('fileGroups', JSON.stringify(this.fileGroups));
+                                      console.log('云存储文件信息已保存到本地存储');
                                   }
+                              } else {
+                                  console.warn('后端返回的文件列表格式不正确：', result.files);
+                                  alert('文件上传成功，但云存储信息格式有误，可能影响下载功能');
                               }
                           }
                       }).catch(error => {

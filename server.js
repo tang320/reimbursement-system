@@ -137,8 +137,10 @@ app.post('/api/upload', upload.array('files'), async (req, res) => {
             return {
                 name: file.originalname,
                 path: file.path,
-                cloudUrl: cloudResult.url,
-                size: file.size
+                cloudUrl: cloudResult.success ? cloudResult.url : null,
+                size: file.size,
+                uploadSuccess: cloudResult.success,
+                message: cloudResult.success ? '上传成功' : cloudResult.message
             };
         });
         
